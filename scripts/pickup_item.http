@@ -1,0 +1,14 @@
+### Pick up an item from the current location
+### Replace {state_id} with the actual game state ID
+### Replace {item} with the name of the item to pick up, like "key", "torch", etc.
+POST http://localhost:5000/pickup/1/key
+
+### Examples:
+### POST http://localhost:5000/pickup/1/torch
+### POST http://localhost:5000/pickup/1/stone
+
+### The response will include:
+### - success status
+### - message confirming the pickup
+### - updated inventory
+### - any triggered events (if applicable)

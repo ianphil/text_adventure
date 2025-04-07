@@ -4,6 +4,7 @@ from flask import Flask, jsonify, request, render_template
 from narrative_engine.game_state import init_app, GameState
 from narrative_engine.graph import NarrativeGraph, Node, load_graph_from_json, graph_to_json
 from narrative_engine.commands import Command, MoveCommand, parse_command, COMMAND_MAPPINGS
+from narrative_engine.events import Event, EventHandler, open_door_event
 import json
 import datetime
 import os
@@ -23,6 +24,29 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Initialize the game state module with the Flask app
 init_app(app)
 
+# Create and configure the event handler
+event_handler = EventHandler()
+# Register the open door event
+event_handler.register_event(open_door_event)
+
+# Create a sample hallway-door event to demonstrate event system
+def create_hallway_node():
+    return Node(
+        "hallway",
+        "You are in a long hallway with a locked door at the end.",
+        exits={"back": "cave_interior"},
+        items=[]
+    )
+
+# Create a secret room node for the door event
+def create_secret_room_node():
+    return Node(
+        "secret_room",
+        "You've found a hidden chamber with ancient treasures!",
+        exits={"exit": "hallway"},
+        items=["gold", "jewels"]
+    )
+
 # Create a simple example narrative graph
 def create_sample_graph():
     graph = NarrativeGraph()
@@ -34,18 +58,23 @@ def create_sample_graph():
                     actions={"light torch": "You light the torch, illuminating the area around you."})
     
     interior = Node("cave_interior", "You're inside the cave. Water drips from stalactites above.",
-                   exits={"back": "entrance", "deeper": "treasure_room"},
+                   exits={"back": "entrance", "deeper": "treasure_room", "hallway": "hallway"},
                    items=["stone"],
                    actions={"examine walls": "You notice strange markings on the walls."})
     
     treasure = Node("treasure_room", "A small chamber with an old chest in the corner.",
                    exits={"exit": "cave_interior"},
-                   items=["chest", "skeleton"],
+                   items=["chest", "skeleton", "key"],
                    actions={"open chest": "The chest contains a golden key!"})
+    
+    hallway = create_hallway_node()
+    secret_room = create_secret_room_node()
     
     graph.add_node(entrance)
     graph.add_node(interior)
     graph.add_node(treasure)
+    graph.add_node(hallway)
+    graph.add_node(secret_room)
     
     return graph
 
@@ -87,6 +116,12 @@ def show_state(state_id):
     if not current_node:
         return jsonify({"error": "Invalid location in game state"}), 500
     
+    # Check for potential events that could trigger in this state
+    potential_events = []
+    for event in event_handler.events:
+        if event.condition(game_state):
+            potential_events.append(event.name)
+    
     # Return the game state information
     return jsonify({
         "game_id": game_state.id,
@@ -98,7 +133,8 @@ def show_state(state_id):
             "items": current_node.items
         },
         "inventory": game_state.inventory,
-        "history": game_state.decision_history
+        "history": game_state.decision_history,
+        "potential_events": potential_events
     })
 
 # Command execution handler
@@ -111,6 +147,8 @@ def execute_command(game_state, command_obj, graph):
     :param graph: The narrative graph for the current game
     :return: dict with result information
     """
+    command_result = {}
+    
     if isinstance(command_obj, MoveCommand):
         direction = command_obj.direction
         current_node = graph.nodes.get(game_state.current_location)
@@ -129,14 +167,21 @@ def execute_command(game_state, command_obj, graph):
             "timestamp": datetime.datetime.now().isoformat()
         })
         
-        return {
+        command_result = {
             "success": True,
             "message": f"Moved {direction} to {new_location}",
             "new_location": new_location
         }
+    else:
+        # Handle other command types as they are added
+        return {"error": "Command type not supported yet"}
     
-    # Handle other command types as they are added
-    return {"error": "Command type not supported yet"}
+    # Process events after command execution
+    triggered_events = event_handler.process_events(game_state)
+    if triggered_events:
+        command_result["triggered_events"] = triggered_events
+    
+    return command_result
 
 @app.route('/command/<int:state_id>', methods=['POST'])
 def process_command(state_id):
@@ -197,6 +242,54 @@ def move(state_id, direction):
         
     # Save the updated game state
     game_state.save()
+    
+    return jsonify(result)
+
+@app.route('/pickup/<int:state_id>/<item>', methods=['POST'])
+def pickup_item(state_id, item):
+    """
+    Route to handle picking up an item in the current location
+    """
+    # Load game state
+    game_state = GameState.load(state_id)
+    if not game_state:
+        return jsonify({"error": "Game state not found"}), 404
+    
+    # Load the narrative graph
+    graph = load_graph_from_json(game_state.narrative_graph)
+    
+    # Get current location data
+    current_node = graph.nodes.get(game_state.current_location)
+    if not current_node:
+        return jsonify({"error": "Invalid location in game state"}), 500
+    
+    # Check if the item is in the current location
+    if item not in current_node.items:
+        return jsonify({"error": f"There is no {item} here to pick up"}), 400
+    
+    # Add item to inventory
+    game_state.add_item(item)
+    
+    # Remove item from the location
+    items = current_node.items.copy()
+    items.remove(item)
+    graph.update_node(current_node.node_id, items=items)
+    
+    # Update the narrative graph in the game state
+    game_state.narrative_graph = graph_to_json(graph)
+    game_state.save()
+    
+    # Process events after picking up the item
+    triggered_events = event_handler.process_events(game_state)
+    
+    result = {
+        "success": True,
+        "message": f"You picked up the {item}",
+        "inventory": game_state.inventory
+    }
+    
+    if triggered_events:
+        result["triggered_events"] = triggered_events
     
     return jsonify(result)
 

@@ -1,0 +1,28 @@
+### Test the door event workflow
+### This script demonstrates how to trigger the door event
+
+### 1. Start a new game
+GET http://localhost:5000/
+
+### 2. Navigate to the treasure room to find the key
+### First to the cave interior
+GET http://localhost:5000/move/1/forward
+
+### Then to the treasure room
+GET http://localhost:5000/move/1/deeper
+
+### 3. Pick up the key
+POST http://localhost:5000/pickup/1/key
+
+### 4. Exit treasure room back to the cave interior
+GET http://localhost:5000/move/1/exit
+
+### 5. Go to the hallway
+GET http://localhost:5000/move/1/hallway
+
+### 6. Check the state - the door should have opened automatically
+### due to the event being triggered (having the key in hallway)
+GET http://localhost:5000/state/1
+
+### 7. Use the newly created door exit to enter the secret room
+GET http://localhost:5000/move/1/door
