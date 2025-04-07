@@ -51,11 +51,21 @@ class GameState(db.Model):
         self.save()
 
     def add_item(self, item):
-        self.inventory.append(item)
+        """Add an item to the inventory and save changes."""
+        # Create a new list with the existing items plus the new one
+        # This ensures SQLAlchemy detects the change
+        current_inventory = self.inventory.copy()
+        current_inventory.append(item)
+        self.inventory = current_inventory
         self.save()
 
     def add_decision(self, decision):
-        self.decision_history.append(decision)
+        """Add a decision to the history and save changes."""
+        # Create a new list with the existing decisions plus the new one
+        # This ensures SQLAlchemy detects the change
+        current_decisions = self.decision_history.copy()
+        current_decisions.append(decision)
+        self.decision_history = current_decisions
         self.save()
 
 def init_app(app):
