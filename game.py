@@ -2,7 +2,7 @@
 
 from flask import Flask, jsonify, request, render_template
 from narrative_engine.game_state import init_app, GameState
-from narrative_engine.graph import NarrativeGraph, Node, load_graph_from_json
+from narrative_engine.graph import NarrativeGraph, Node, load_graph_from_json, graph_to_json
 from narrative_engine.commands import Command, MoveCommand, parse_command, COMMAND_MAPPINGS
 import json
 import datetime
@@ -49,17 +49,6 @@ def create_sample_graph():
     
     return graph
 
-# Convert graph to JSON for storage
-def graph_to_json(graph):
-    nodes_dict = {}
-    for node_id, node in graph.nodes.items():
-        nodes_dict[node_id] = {
-            "description": node.description,
-            "exits": node.exits,
-            "items": node.items,
-            "actions": node.actions
-        }
-    return json.dumps({"nodes": nodes_dict})
 
 @app.route('/')
 def index():

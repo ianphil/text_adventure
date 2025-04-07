@@ -64,3 +64,15 @@ def load_graph_from_json(config_str):
         )
         graph.add_node(node)
     return graph
+
+# Convert graph to JSON for storage
+def graph_to_json(graph):
+    nodes_dict = {}
+    for node_id, node in graph.nodes.items():
+        nodes_dict[node_id] = {
+            "description": node.description,
+            "exits": node.exits,
+            "items": node.items,
+            "actions": node.actions
+        }
+    return json.dumps({"nodes": nodes_dict})
