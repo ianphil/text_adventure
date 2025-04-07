@@ -6,9 +6,18 @@ from narrative_engine.graph import NarrativeGraph, Node, load_graph_from_json
 from narrative_engine.commands import Command, MoveCommand, parse_command, COMMAND_MAPPINGS
 import json
 import datetime
+import os
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/game_state.db'
+
+# Ensure instance directory exists
+instance_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance')
+if not os.path.exists(instance_path):
+    os.makedirs(instance_path)
+    print(f"Created instance directory at: {instance_path}")
+
+# Use absolute path for database URI
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(instance_path, "game_state.db")}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize the game state module with the Flask app
