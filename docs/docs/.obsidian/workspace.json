@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Game_Engine/3. Game State manager.md",
+                "file": "General_Prompts/2. Specific Tasks.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "3. Game State manager"
+              "title": "2. Specific Tasks"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Game_Engine/3. Game State manager.md",
+                "file": "General_Prompts/2. Specific Tasks.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for 3. Game State manager"
+              "title": "Backlinks for 2. Specific Tasks"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Game_Engine/3. Game State manager.md",
+                "file": "General_Prompts/2. Specific Tasks.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from 3. Game State manager"
+              "title": "Outgoing links from 2. Specific Tasks"
             }
           },
           {
@@ -142,13 +142,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Game_Engine/3. Game State manager.md",
+                "file": "General_Prompts/2. Specific Tasks.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of 3. Game State manager"
+              "title": "Outline of 2. Specific Tasks"
             }
           }
         ]
@@ -170,12 +170,12 @@
   },
   "active": "38ab4a298b117938",
   "lastOpenFiles": [
-    "Spec.md",
+    "Game_Engine/1. Detailed Game Engine Blueprint.md",
     "Game_Engine/3. Game State manager.md",
+    "Spec.md",
     "General_Prompts/2. Specific Tasks.md",
     "General_Prompts/1. Specific Blueprint.md",
     "Game_Engine/2. Narrative Graph Tasks.md",
-    "Game_Engine/1. Detailed Game Engine Blueprint.md",
     "General_Prompts",
     "Game_Engine",
     "Welcome.md"
