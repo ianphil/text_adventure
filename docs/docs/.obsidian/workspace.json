@@ -171,9 +171,11 @@
   "active": "38ab4a298b117938",
   "lastOpenFiles": [
     "Game_Engine/1. Detailed Game Engine Blueprint.md",
+    "Game_Engine/5. Event Triggers & Action Handlers.md",
+    "Game_Engine/4. Command Parser.md",
     "Game_Engine/3. Game State manager.md",
-    "Spec.md",
     "General_Prompts/2. Specific Tasks.md",
+    "Spec.md",
     "General_Prompts/1. Specific Blueprint.md",
     "Game_Engine/2. Narrative Graph Tasks.md",
     "General_Prompts",

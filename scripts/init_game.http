@@ -1,0 +1,5 @@
+### Initialize the game
+GET http://localhost:5000/
+
+### Response will contain a game_id to use in subsequent requests
+### Example: Game initialized with ID: 1

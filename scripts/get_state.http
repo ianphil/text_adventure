@@ -1,0 +1,10 @@
+### Get the current game state
+### Replace {state_id} with the actual game state ID you received from init_game
+GET http://localhost:5000/state/1
+
+### The response will include:
+### - game_id
+### - progress
+### - current location (with description, exits, and items)
+### - inventory
+### - decision history

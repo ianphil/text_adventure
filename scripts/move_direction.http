@@ -1,0 +1,13 @@
+### Use the legacy move endpoint to navigate
+### Replace {state_id} with the actual game state ID you received from init_game
+### Replace {direction} with a valid direction like "forward", "back", "deeper", "exit"
+GET http://localhost:5000/move/1/forward
+
+### Examples:
+### GET http://localhost:5000/move/1/deeper
+### GET http://localhost:5000/move/1/back
+
+### The response will include:
+### - success status
+### - message describing the movement
+### - new location

@@ -25,12 +25,14 @@ class GameState(db.Model):
     current_location = db.Column(db.String(100), nullable=False)
     inventory = db.Column(JSONEncodedDict, nullable=False, default=[])
     decision_history = db.Column(JSONEncodedDict, nullable=False, default=[])
+    narrative_graph = db.Column(JSONEncodedDict, nullable=True)
 
-    def __init__(self, player_progress, current_location, inventory=None, decision_history=None):
+    def __init__(self, player_progress, current_location, inventory=None, decision_history=None, narrative_graph=None):
         self.player_progress = player_progress
         self.current_location = current_location
         self.inventory = inventory if inventory is not None else []
         self.decision_history = decision_history if decision_history is not None else []
+        self.narrative_graph = narrative_graph
 
     def save(self):
         """Save the current game state to the database."""

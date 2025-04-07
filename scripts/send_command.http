@@ -1,0 +1,17 @@
+### Send a command to the game
+### Replace {state_id} with the actual game state ID you received from init_game
+POST http://localhost:5000/command/1
+Content-Type: application/json
+
+{
+    "command": "go forward"
+}
+
+### Try other commands like:
+### { "command": "go deeper" }
+### { "command": "go back" }
+
+### The response will include:
+### - success status
+### - message describing what happened
+### - new location (if movement was successful)
