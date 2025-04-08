@@ -10,5 +10,6 @@ POST http://localhost:5000/pickup/1/key
 ### The response will include:
 ### - success status
 ### - message confirming the pickup
-### - updated inventory
-### - any triggered events (if applicable)
+### - narrative: AI-generated description of the item and how it feels to pick it up
+### - inventory: Updated list of items the player is carrying
+### - triggered_events: Any events that were triggered by picking up this item (if applicable)

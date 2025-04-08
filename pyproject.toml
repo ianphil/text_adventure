@@ -7,7 +7,10 @@ requires-python = ">=3.11"
 dependencies = [
     "flask>=3.1.0",
     "flask-sqlalchemy>=3.1.1",
+    "openai>=1.71.0",
     "pytest>=8.3.5",
+    "python-dotenv>=1.1.0",
+    "redis>=5.2.1",
 ]
 
 [build-system]

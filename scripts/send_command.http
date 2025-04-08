@@ -14,4 +14,6 @@ Content-Type: application/json
 ### The response will include:
 ### - success status
 ### - message describing what happened
-### - new location (if movement was successful)
+### - narrative: AI-generated description of the transition or action
+### - new_location: The identifier of the new location (if movement was successful)
+### - triggered_events: Any events that were triggered by this command (if applicable)

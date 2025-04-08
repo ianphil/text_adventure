@@ -5,9 +5,15 @@ from narrative_engine.game_state import init_app, GameState
 from narrative_engine.graph import NarrativeGraph, Node, load_graph_from_json, graph_to_json
 from narrative_engine.commands import Command, MoveCommand, parse_command, COMMAND_MAPPINGS
 from narrative_engine.events import Event, EventHandler, open_door_event
+from narrative_engine.ai_generator import init_app as init_ai, generate_dynamic_narrative
+from narrative_engine.narrative_memory import NarrativeMemory
 import json
 import datetime
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -21,8 +27,16 @@ if not os.path.exists(instance_path):
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(instance_path, "game_state.db")}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# AI Generator Module Configuration
+app.config['OPENAI_API_KEY'] = os.environ.get('OPENAI_API_KEY', 'fake-key-for-development')
+app.config['REDIS_URL'] = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+app.config['REDIS_CACHING_ENABLED'] = False  # Disable Redis caching as requested
+
 # Initialize the game state module with the Flask app
 init_app(app)
+
+# Initialize the AI generator module
+init_ai(app)
 
 # Create and configure the event handler
 event_handler = EventHandler()
@@ -87,6 +101,17 @@ def index():
     # Serialize the graph for storage
     graph_json = graph_to_json(game_graph)
     
+    # Create narrative memory for the game
+    memory = NarrativeMemory()
+    
+    # Generate dynamic introduction narrative
+    intro_narrative = generate_dynamic_narrative(
+        "cave entrance", 
+        "mysterious", 
+        "darkness, breeze, stone walls",
+        memory
+    )
+    
     # Create or update game state with the graph
     game_state = GameState(
         player_progress="Level 1", 
@@ -95,11 +120,16 @@ def index():
         decision_history=[{"action": "start_game", "timestamp": "2025-04-07T12:00:00"}]
     )
     
-    # Store the narrative graph in a custom field
+    # Store the narrative graph and memory in custom fields
     game_state.narrative_graph = graph_json
+    game_state.narrative_memory = json.dumps([event for event in memory.events])
     game_state.save()
     
-    return f"Game initialized with ID: {game_state.id}"
+    return jsonify({
+        "game_id": game_state.id,
+        "intro_narrative": intro_narrative,
+        "message": f"Game initialized with ID: {game_state.id}"
+    })
 
 @app.route('/state/<int:state_id>')
 def show_state(state_id):
@@ -122,13 +152,32 @@ def show_state(state_id):
         if event.condition(game_state):
             potential_events.append(event.name)
     
-    # Return the game state information
+    # Load narrative memory
+    memory = NarrativeMemory()
+    if hasattr(game_state, 'narrative_memory') and game_state.narrative_memory:
+        try:
+            memory_events = json.loads(game_state.narrative_memory)
+            for event in memory_events:
+                memory.add_event(event)
+        except json.JSONDecodeError:
+            app.logger.error("Failed to parse narrative memory from game state")
+    
+    # Generate dynamic description for current location
+    location_narrative = generate_dynamic_narrative(
+        current_node.node_id,
+        "descriptive",
+        ", ".join(current_node.items) if current_node.items else "ambient details",
+        memory
+    )
+    
+    # Return the game state information with enhanced narrative
     return jsonify({
         "game_id": game_state.id,
         "progress": game_state.player_progress,
         "location": {
             "id": current_node.node_id,
             "description": current_node.description,
+            "narrative": location_narrative,
             "exits": current_node.exits,
             "items": current_node.items
         },
@@ -149,6 +198,16 @@ def execute_command(game_state, command_obj, graph):
     """
     command_result = {}
     
+    # Load or initialize narrative memory
+    memory = NarrativeMemory()
+    if hasattr(game_state, 'narrative_memory') and game_state.narrative_memory:
+        try:
+            memory_events = json.loads(game_state.narrative_memory)
+            for event in memory_events:
+                memory.add_event(event)
+        except json.JSONDecodeError:
+            app.logger.error("Failed to parse narrative memory from game state")
+    
     if isinstance(command_obj, MoveCommand):
         direction = command_obj.direction
         current_node = graph.nodes.get(game_state.current_location)
@@ -167,14 +226,32 @@ def execute_command(game_state, command_obj, graph):
             "timestamp": datetime.datetime.now().isoformat()
         })
         
+        # Add to narrative memory
+        memory.add_event(f"You moved {direction} to the {new_location}.")
+        
+        # Get the new location node
+        new_node = graph.nodes.get(new_location)
+        
+        # Generate dynamic transition narrative
+        transition_narrative = generate_dynamic_narrative(
+            new_location,
+            "atmospheric",
+            ", ".join(new_node.items) if new_node.items else "ambient details",
+            memory
+        )
+        
         command_result = {
             "success": True,
             "message": f"Moved {direction} to {new_location}",
+            "narrative": transition_narrative,
             "new_location": new_location
         }
     else:
         # Handle other command types as they are added
         return {"error": "Command type not supported yet"}
+    
+    # Save updated narrative memory to game state
+    game_state.narrative_memory = json.dumps([event for event in memory.events])
     
     # Process events after command execution
     triggered_events = event_handler.process_events(game_state)
@@ -270,6 +347,30 @@ def pickup_item(state_id, item):
     # Add item to inventory
     game_state.add_item(item)
     
+    # Load or initialize narrative memory
+    memory = NarrativeMemory()
+    if hasattr(game_state, 'narrative_memory') and game_state.narrative_memory:
+        try:
+            memory_events = json.loads(game_state.narrative_memory)
+            for event in memory_events:
+                memory.add_event(event)
+        except json.JSONDecodeError:
+            app.logger.error("Failed to parse narrative memory from game state")
+    
+    # Add to narrative memory
+    memory.add_event(f"You picked up the {item}.")
+    
+    # Generate dynamic item narrative
+    item_narrative = generate_dynamic_narrative(
+        item,
+        "intriguing",
+        f"{item}, texture, details",
+        memory
+    )
+    
+    # Save updated narrative memory to game state
+    game_state.narrative_memory = json.dumps([event for event in memory.events])
+    
     # Remove item from the location
     items = current_node.items.copy()
     items.remove(item)
@@ -285,6 +386,7 @@ def pickup_item(state_id, item):
     result = {
         "success": True,
         "message": f"You picked up the {item}",
+        "narrative": item_narrative,
         "inventory": game_state.inventory
     }
     

@@ -5,6 +5,12 @@ GET http://localhost:5000/state/1
 ### The response will include:
 ### - game_id
 ### - progress
-### - current location (with description, exits, and items)
-### - inventory
-### - decision history
+### - location:
+###   - id: The location identifier
+###   - description: Basic location description
+###   - narrative: AI-generated dynamic narrative based on the current location and game history
+###   - exits: Available directions to move
+###   - items: Items present at this location
+### - inventory: Items the player is carrying
+### - history: Past decisions made in the game
+### - potential_events: Events that could trigger based on current state

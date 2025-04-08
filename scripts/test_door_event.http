@@ -1,5 +1,6 @@
 ### Test the door event workflow
-### This script demonstrates how to trigger the door event
+### This script demonstrates how to trigger the door event and shows how
+### narrative memory accumulates throughout the adventure
 
 ### 1. Start a new game
 GET http://localhost:5000/
@@ -7,22 +8,29 @@ GET http://localhost:5000/
 ### 2. Navigate to the treasure room to find the key
 ### First to the cave interior
 GET http://localhost:5000/move/1/forward
+### Note how the narrative response is enhanced with AI-generated descriptions
 
 ### Then to the treasure room
 GET http://localhost:5000/move/1/deeper
+### The narrative now includes memory of your previous movement
 
 ### 3. Pick up the key
 POST http://localhost:5000/pickup/1/key
+### Notice the detailed description of the key provided by the AI
 
 ### 4. Exit treasure room back to the cave interior
 GET http://localhost:5000/move/1/exit
+### The narrative will reference your possession of the key
 
 ### 5. Go to the hallway
 GET http://localhost:5000/move/1/hallway
+### The narrative continues to build upon your journey so far
 
 ### 6. Check the state - the door should have opened automatically
 ### due to the event being triggered (having the key in hallway)
 GET http://localhost:5000/state/1
+### The narrative description will now include the newly opened door
 
 ### 7. Use the newly created door exit to enter the secret room
 GET http://localhost:5000/move/1/door
+### The narrative will create an atmospheric description of discovering the secret room

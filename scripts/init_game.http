@@ -1,5 +1,14 @@
 ### Initialize the game
 GET http://localhost:5000/
 
-### Response will contain a game_id to use in subsequent requests
-### Example: Game initialized with ID: 1
+### Response will contain:
+### - game_id to use in subsequent requests
+### - intro_narrative: AI-generated dynamic introduction to the game
+### - message: Confirmation of game initialization
+### 
+### Example response:
+### {
+###   "game_id": 1,
+###   "intro_narrative": "The cave entrance looms before you, a gaping maw in the mountainside...",
+###   "message": "Game initialized with ID: 1"
+### }

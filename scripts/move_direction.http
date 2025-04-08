@@ -10,4 +10,6 @@ GET http://localhost:5000/move/1/forward
 ### The response will include:
 ### - success status
 ### - message describing the movement
-### - new location
+### - narrative: AI-generated atmospheric description of the transition between locations
+### - new_location: The identifier of the new location
+### - triggered_events: Any events that were triggered by this movement (if applicable)
