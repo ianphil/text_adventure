@@ -120,6 +120,16 @@ To test this workflow, use `scripts/test_door_event.http`
 │   ├── game_state.py          # Game state management
 │   ├── graph.py               # Narrative graph structure
 │   └── narrative_memory.py    # Persistent memory of game events
+├── models/                    # SQLAlchemy ORM models
+│   ├── __init__.py
+│   ├── action.py
+│   ├── generated_content.py
+│   ├── game_state.py
+│   ├── item.py
+│   ├── location.py
+│   ├── narrative_prompt.py
+│   ├── player.py
+│   └── story_memory.py
 ├── scripts/                   # HTTP request scripts for testing
 │   ├── init_game.http         # Initialize a new game
 │   ├── get_state.http         # Get current game state
