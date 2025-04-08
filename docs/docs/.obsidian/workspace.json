@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Game_Engine/1. Detailed Game Engine Blueprint.md",
+                "file": "Spec.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "1. Detailed Game Engine Blueprint"
+              "title": "Spec"
             }
           }
         ],
@@ -109,7 +109,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Game_Engine/1. Detailed Game Engine Blueprint.md",
+                "file": "Spec.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -119,7 +119,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for 1. Detailed Game Engine Blueprint"
+              "title": "Backlinks for Spec"
             }
           },
           {
@@ -128,12 +128,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Game_Engine/1. Detailed Game Engine Blueprint.md",
+                "file": "Spec.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from 1. Detailed Game Engine Blueprint"
+              "title": "Outgoing links from Spec"
             }
           },
           {
@@ -157,13 +157,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Game_Engine/1. Detailed Game Engine Blueprint.md",
+                "file": "Spec.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of 1. Detailed Game Engine Blueprint"
+              "title": "Outline of Spec"
             }
           }
         ]
@@ -185,17 +185,17 @@
   },
   "active": "de214bc09300ae81",
   "lastOpenFiles": [
+    "General_Prompts/1. Specific Blueprint.md",
+    "General_Prompts/2. Specific Tasks.md",
+    "Game_Engine/1. Detailed Game Engine Blueprint.md",
     "Game_Engine/6. AI-Driven Content Generation.md",
     "Game_Engine/5. Event Triggers & Action Handlers.md",
-    "Game_Engine/1. Detailed Game Engine Blueprint.md",
-    "General_Prompts/2. Specific Tasks.md",
     "Notes/Commands vs Events.md",
     "Notes/Untitled 1.md",
     "Notes",
     "Game_Engine/4. Command Parser.md",
     "Game_Engine/3. Game State manager.md",
     "Spec.md",
-    "General_Prompts/1. Specific Blueprint.md",
     "Game_Engine/2. Narrative Graph Tasks.md",
     "General_Prompts",
     "Game_Engine",
