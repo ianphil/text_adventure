@@ -63,23 +63,23 @@ def door_action(game_state):
     Update the game state to mark the door as open and add a new exit.
     :param game_state: GameState object.
     """
+    # Set the door flag to open
+    if hasattr(game_state, 'flags') and isinstance(game_state.flags, dict):
+        game_state.flags['door_open'] = True
+    
+    # Add a new exit called 'door' that leads to a secret room
+    if hasattr(game_state, 'exits') and isinstance(game_state.exits, dict):
+        game_state.exits['door'] = 'secret_room'
+
     # We need to update the graph to add the new exit
     from narrative_engine.graph import load_graph_from_json
-    
-    # Load the narrative graph
     graph = load_graph_from_json(game_state.narrative_graph)
-    
-    # Get the hallway node
     hallway_node = graph.nodes.get('hallway')
-    
-    # Add the door exit to the secret room
     if hallway_node:
         hallway_node.exits['door'] = 'secret_room'
-        
-    # Save the updated graph back to the game state
     from narrative_engine.graph import graph_to_json
     game_state.narrative_graph = graph_to_json(graph)
-    
+
     # Add to narrative memory
     if hasattr(game_state, 'narrative_memory'):
         import json
@@ -89,10 +89,9 @@ def door_action(game_state):
                 memory_events = json.loads(game_state.narrative_memory) if isinstance(game_state.narrative_memory, str) else game_state.narrative_memory
             except json.JSONDecodeError:
                 memory_events = []
-                
         memory_events.append("The ancient key glows briefly. With a loud creak, the door in the hallway slowly opens, revealing a passage beyond.")
         game_state.narrative_memory = json.dumps(memory_events) if not isinstance(game_state.narrative_memory, list) else memory_events
-    
+
     # Save the changes
     game_state.save()
 

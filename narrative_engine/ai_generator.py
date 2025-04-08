@@ -6,6 +6,7 @@ from openai import OpenAI  # Updated import from the latest SDK
 import logging
 import hashlib
 from .narrative_memory import NarrativeMemory  # Import the memory module
+from models.narrative_prompt import NarrativePrompt
 
 # Module-level variables to hold configuration settings
 OPENAI_API_KEY = None
@@ -76,12 +77,14 @@ def generate_narrative(prompt):
         return fallback_narrative("unknown", "neutral", "unspecified")
 
 
-# Update the narrative prompt template to include a memory log segment.
-NARRATIVE_TEMPLATE = (
-    "{memory_log}"
-    "Generate a detailed description of a {location_type} environment, "
-    "using a {tone} tone. Be sure to include the following elements: {required_elements}."
-)
+def get_prompt_template(prompt_name):
+    """
+    Retrieve a prompt template and parameters from the database by name.
+    """
+    prompt_obj = NarrativePrompt.query.filter_by(name=prompt_name).first()
+    if not prompt_obj:
+        raise ValueError(f"NarrativePrompt '{prompt_name}' not found in database.")
+    return prompt_obj.prompt_template, prompt_obj.to_dict()
 
 def build_prompt(template, **kwargs):
     """
@@ -124,56 +127,76 @@ def fallback_narrative(location_type, tone, required_elements):
         "are subtly suggested by the surroundings."
     )
 
-def generate_dynamic_narrative(location_type, tone, required_elements, memory: NarrativeMemory = None):
+def generate_dynamic_narrative(location_type, tone, required_elements, memory: NarrativeMemory = None, prompt_name="location_description"):
     """
-    Combines prompt building, caching, API call, content validation, and narrative memory to generate narrative content dynamically.
-    
-    :param location_type: The type of location (e.g., 'dungeon', 'forest').
-    :param tone: The desired tone (e.g., 'mysterious', 'whimsical').
-    :param required_elements: A comma-separated string of key narrative elements.
-    :param memory: (Optional) An instance of NarrativeMemory to incorporate previous narrative events.
-    :return: AI-generated narrative text that meets validation criteria, or a fallback narrative.
+    Generate narrative content dynamically using a prompt template from the database.
     """
-    # Retrieve memory log if a memory instance is provided
+    # Fetch template and metadata
+    try:
+        template_str, prompt_meta = get_prompt_template(prompt_name)
+    except Exception as e:
+        logger.error("Error fetching prompt template: %s", e)
+        # fallback to default template string
+        template_str = (
+            "{memory_log}"
+            "Generate a detailed description of a {location_type} environment, "
+            "using a {tone} tone. Be sure to include the following elements: {required_elements}."
+        )
+        prompt_meta = {"max_tokens": 500, "temperature": 0.7}
+
     memory_log = memory.get_log() if memory else ""
-    
-    # Build the prompt with dynamic variables and the current memory log
+
     prompt = build_prompt(
-        NARRATIVE_TEMPLATE,
+        template_str,
         memory_log=memory_log,
         location_type=location_type,
         tone=tone,
         required_elements=required_elements
     )
 
-    # Create a unique cache key based on the prompt
     cache_key = hashlib.sha256(prompt.encode('utf-8')).hexdigest()
 
-    # Check if caching is enabled and try to retrieve cached content
     if CACHING_ENABLED and redis_client:
         cached_narrative = redis_client.get(cache_key)
         if cached_narrative:
             logger.info("Using cached narrative for prompt: %s", prompt)
             narrative = cached_narrative.decode('utf-8')
         else:
-            narrative = generate_narrative(prompt)
+            narrative = generate_narrative_with_params(prompt, prompt_meta)
     else:
-        narrative = generate_narrative(prompt)
-    
-    # Validate the generated narrative; if it fails, use the fallback
+        narrative = generate_narrative_with_params(prompt, prompt_meta)
+
     if not validate_narrative(narrative, required_elements):
         logger.warning("Generated narrative failed validation. Using fallback narrative.")
         narrative = fallback_narrative(location_type, tone, required_elements)
-    
-    # Store the generated narrative in Redis if caching is enabled
+
     if CACHING_ENABLED and redis_client:
         try:
             redis_client.set(cache_key, narrative)
         except Exception as cache_error:
             logger.error("Error storing narrative in Redis: %s", cache_error)
-    
-    # Update narrative memory if provided
+
     if memory:
         memory.add_event(narrative)
-    
+
     return narrative
+
+def generate_narrative_with_params(prompt, prompt_meta):
+    """
+    Generate narrative using OpenAI API with parameters from prompt metadata.
+    """
+    try:
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are a creative narrative generator for a text-based adventure game."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=prompt_meta.get("max_tokens", 500),
+            temperature=prompt_meta.get("temperature", 0.7)
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as error:
+        logger.error("Error during API call: %s", error)
+        return fallback_narrative("unknown", "neutral", "unspecified")

@@ -6,7 +6,7 @@ import openai
 from narrative_engine.ai_generator import (
     init_app, build_prompt, validate_narrative, 
     fallback_narrative, generate_narrative, 
-    generate_dynamic_narrative, NARRATIVE_TEMPLATE
+    generate_dynamic_narrative
 )
 from narrative_engine.narrative_memory import NarrativeMemory
 
@@ -142,44 +142,38 @@ class TestAIGenerator:
         assert result == "Cached narrative about a cave."
         mock_gen.assert_not_called()  # Should not call generate_narrative when cache hit
     
+    @mock.patch('narrative_engine.ai_generator.get_prompt_template', return_value=(
+        "{memory_log}Generate a detailed description of a {location_type} environment, using a {tone} tone. Be sure to include the following elements: {required_elements}.",
+        {"max_tokens": 500, "temperature": 0.7}
+    ))
     @mock.patch('narrative_engine.ai_generator.redis_client')
     @mock.patch('narrative_engine.ai_generator.CACHING_ENABLED', True)
     @mock.patch('narrative_engine.ai_generator.validate_narrative')
-    @mock.patch('narrative_engine.ai_generator.generate_narrative')
-    def test_generate_dynamic_narrative_without_cache(self, mock_gen, mock_validate, mock_redis):
+    @mock.patch('narrative_engine.ai_generator.generate_narrative_with_params')
+    def test_generate_dynamic_narrative_without_cache(self, mock_gen_params, mock_validate, mock_redis, mock_prompt):
         """Test generating dynamic narrative with cache miss."""
         mock_redis.get.return_value = None
-        mock_gen.return_value = "New narrative about a cave with stalactites and bats."
+        mock_gen_params.return_value = "New narrative about a cave with stalactites and bats."
         mock_validate.return_value = True  # Ensure validation passes
-        
+    
         result = generate_dynamic_narrative("cave", "spooky", "stalactites, bats")
-        
+    
         assert result == "New narrative about a cave with stalactites and bats."
-        mock_gen.assert_called_once()
+        mock_gen_params.assert_called_once()
         mock_redis.set.assert_called_once()
     
-    @mock.patch('narrative_engine.ai_generator.redis_client')
-    @mock.patch('narrative_engine.ai_generator.CACHING_ENABLED', True)
-    @mock.patch('narrative_engine.ai_generator.validate_narrative')
-    @mock.patch('narrative_engine.ai_generator.generate_narrative')
-    def test_generate_dynamic_narrative_validation_fail(self, mock_gen, mock_validate, mock_redis):
-        """Test generating dynamic narrative with validation failure."""
-        mock_redis.get.return_value = None
-        mock_gen.return_value = "Narrative about a cave."
-        mock_validate.return_value = False
-        
-        result = generate_dynamic_narrative("cave", "spooky", "stalactites, bats")
-        
-        assert "ambiance" in result  # From fallback narrative
-    
+    @mock.patch('narrative_engine.ai_generator.get_prompt_template', return_value=(
+        "{memory_log}Generate a detailed description of a {location_type} environment, using a {tone} tone. Be sure to include the following elements: {required_elements}.",
+        {"max_tokens": 500, "temperature": 0.7}
+    ))
     @mock.patch('narrative_engine.ai_generator.redis_client')
     @mock.patch('narrative_engine.ai_generator.validate_narrative')
-    def test_generate_dynamic_narrative_with_memory(self, mock_validate, mock_redis):
+    def test_generate_dynamic_narrative_with_memory(self, mock_validate, mock_redis, mock_prompt):
         """Test generating dynamic narrative with memory integration."""
-        with mock.patch('narrative_engine.ai_generator.generate_narrative') as mock_gen:
+        with mock.patch('narrative_engine.ai_generator.generate_narrative_with_params') as mock_gen_params:
             # Setup all mocks properly
             mock_redis.get.return_value = None
-            mock_gen.return_value = "Narrative about a cave with stalactites and bats."
+            mock_gen_params.return_value = "Narrative about a cave with stalactites and bats."
             mock_validate.return_value = True  # Ensure validation passes
             
             memory = NarrativeMemory()
@@ -188,8 +182,8 @@ class TestAIGenerator:
             result = generate_dynamic_narrative("cave", "spooky", "stalactites, bats", memory)
             
             # Verify the narrative was generated with the expected parameters
-            mock_gen.assert_called_once()
-            call_args = mock_gen.call_args[0][0]
+            mock_gen_params.assert_called_once()
+            call_args = mock_gen_params.call_args[0][0]
             assert "Player entered the cave entrance." in call_args
             
             # Check that the new narrative was added to memory

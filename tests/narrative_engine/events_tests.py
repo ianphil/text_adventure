@@ -1,6 +1,6 @@
-# filepath: /home/ianphil/src/text_adventure/tests/narrative_engine/events_tests.py
 import pytest
 from narrative_engine.events import Event, EventHandler, door_condition, door_action
+from unittest.mock import MagicMock
 
 class TestEvent:
     def test_event_initialization(self):
@@ -92,45 +92,52 @@ class TestEventHandler:
 
 class TestDoorEvent:
     def test_door_condition_not_met_wrong_location(self):
-        game_state = {
-            "current_location": "bedroom",  # Not in hallway
-            "inventory": ["key"],
-            "flags": {"door_open": False}
-        }
+        game_state = MagicMock()
+        game_state.current_location = "bedroom"
+        game_state.inventory = ["key"]
+        game_state.door_open = False
         assert not door_condition(game_state)
 
     def test_door_condition_not_met_no_key(self):
-        game_state = {
-            "current_location": "hallway",
-            "inventory": [],  # No key
-            "flags": {"door_open": False}
-        }
+        game_state = MagicMock()
+        game_state.current_location = "hallway"
+        game_state.inventory = []
+        game_state.door_open = False
         assert not door_condition(game_state)
 
     def test_door_condition_not_met_door_already_open(self):
-        game_state = {
-            "current_location": "hallway",
-            "inventory": ["key"],
-            "flags": {"door_open": True}  # Door already open
-        }
+        game_state = MagicMock()
+        game_state.current_location = "hallway"
+        game_state.inventory = ["key"]
+        game_state.door_open = True
         assert not door_condition(game_state)
 
     def test_door_condition_met(self):
-        game_state = {
-            "current_location": "hallway",
-            "inventory": ["key"],
-            "flags": {"door_open": False}
-        }
+        game_state = MagicMock()
+        game_state.current_location = "hallway"
+        game_state.inventory = ["key"]
+        game_state.door_open = False
         assert door_condition(game_state)
 
     def test_door_action(self):
-        game_state = {
-            "current_location": "hallway",
-            "inventory": ["key"]
-        }
-        
-        # Capture the print output
+        game_state = MagicMock()
+        game_state.current_location = "hallway"
+        game_state.inventory = ["key"]
+        game_state.flags = {"door_open": False}
+        game_state.exits = {}
+        game_state.narrative_graph = '{}'
+        game_state.narrative_memory = []
+
+        # Mock load_graph_from_json to return an object with .nodes
+        import narrative_engine.graph as graph_module
+        graph_mock = MagicMock()
+        hallway_node = MagicMock()
+        hallway_node.exits = {}
+        graph_mock.nodes = {"hallway": hallway_node}
+        graph_module.load_graph_from_json = MagicMock(return_value=graph_mock)
+        graph_module.graph_to_json = MagicMock(return_value='{"nodes": {}}')
+
         door_action(game_state)
-        
-        assert game_state["flags"]["door_open"] is True
-        assert game_state["exits"]["door"] == "secret_room"
+
+        assert game_state.flags["door_open"] is True
+        assert game_state.exits["door"] == "secret_room"

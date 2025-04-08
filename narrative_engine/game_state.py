@@ -1,8 +1,6 @@
-from flask_sqlalchemy import SQLAlchemy
+from models import db
 from sqlalchemy.types import TypeDecorator, TEXT
 import json
-
-db = SQLAlchemy()
 
 class JSONEncodedDict(TypeDecorator):
     """A custom type to store JSON-encoded dictionaries."""
